@@ -141,7 +141,7 @@ Implement `PosterDesignDecisionAgent` at `wimlds/agents/publishing/poster_design
 - [-] 5. Checkpoint — Ensure all component tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [~] 6. Implement `PosterDesignDecisionAgent`
+- [ ] 6. Implement `PosterDesignDecisionAgent`
   - Add `PosterDesignDecisionAgent` class with `__init__(self, dry_run=False, max_retries=2)`
     - Instantiate `DesignInputValidator`, `DesignPromptBuilder`, `DesignOutputValidator`, and `LLMClient`
   - Implement `decide(content_json, brand_colors=None) -> AgentResult`
@@ -199,7 +199,7 @@ Implement `PosterDesignDecisionAgent` at `wimlds/agents/publishing/poster_design
     - Test `run()` does not write `design_decision` on failure
     - _Requirements: 3.1–3.5, 5.1–5.5, 6.1–6.5, 7.1–7.4, 8.1–8.5_
 
-- [~] 7. Implement serialization round-trip property test (Property 18 & 19)
+- [ ] 7. Implement serialization round-trip property test (Property 18 & 19)
   - [ ]* 7.1 Write property test for `DesignDecision.to_dict()` key set (Property 18)
     - **Property 18: to_dict() keys exactly match the output JSON contract**
     - **Validates: Requirements 9.2, 9.3**
@@ -209,7 +209,7 @@ Implement `PosterDesignDecisionAgent` at `wimlds/agents/publishing/poster_design
     - Construct a valid `DesignDecision`, call `to_dict()`, pass result to `DesignOutputValidator.validate()`, assert returned `DesignDecision` equals the original
     - **Validates: Requirements 10.1, 10.2**
 
-- [~] 8. Final checkpoint — Ensure all tests pass
+- [ ] 8. Final checkpoint — Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Notes
