@@ -21,6 +21,7 @@ anthropic>=0.28          # claude-haiku-4-5-20251001 (free tier), claude-opus-4-
 # ── Testing ───────────────────────────────────────────────────────────────────
 pytest>=8.2
 pytest-mock>=3.14
+hypothesis>=6.100
 
 # ── Optional: email notifications ─────────────────────────────────────────────
 # sendgrid>=6.11
