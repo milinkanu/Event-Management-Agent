@@ -1,0 +1,25 @@
+WEBVTT
+
+00:00:03.000 --> 00:00:10.000
+Aditya Kulkarni: Good morning everyone! Welcome to WiMLDS Pune. I'm Aditya Kulkarni from Google DeepMind.
+
+00:00:10.500 --> 00:00:25.000
+Aditya Kulkarni: Today we'll be exploring how to build production-ready RAG pipelines. Most RAG implementations fail not because of the LLM, but because of poor retrieval design.
+
+00:00:26.000 --> 00:00:45.000
+Aditya Kulkarni: The first thing we need to understand is chunking strategy. Fixed-size chunking is a common mistake. Semantic chunking — splitting on paragraph boundaries and topic shifts — improves retrieval recall by over 20 percent.
+
+00:01:00.000 --> 00:01:20.000
+Aditya Kulkarni: Vector databases: Pinecone is excellent for managed production at scale, Chroma works great for local development, and FAISS gives you full control over the approximate nearest-neighbour algorithm.
+
+00:01:25.000 --> 00:01:45.000
+Attendee: How do you handle multi-hop reasoning in RAG?
+
+00:01:46.000 --> 00:02:10.000
+Aditya Kulkarni: Great question. Simple RAG doesn't handle multi-hop well. You need an agent loop with step-back prompting — the model first generates a higher-level query, retrieves on that, then refines with the original question.
+
+00:02:15.000 --> 00:02:35.000
+Aditya Kulkarni: For evaluation, use the RAGAS framework. The three key metrics are: faithfulness — does the answer stick to retrieved context? Answer relevancy — does it answer the actual question? And context precision — are the retrieved chunks actually useful?
+
+00:02:40.000 --> 00:03:00.000
+Aditya Kulkarni: Thank you all so much for attending today. The recording and slides will be shared in the Meetup group. Please join the WiMLDS Pune community if you haven't already!

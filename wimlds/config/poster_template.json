@@ -1,0 +1,81 @@
+{
+  "canvas": {
+    "width": 1080,
+    "height": 1350,
+    "background_color": [255, 255, 255]
+  },
+  "brand": {
+    "primary_color": [76, 29, 149],
+    "accent_color": [236, 72, 153],
+    "text_dark": [31, 41, 55],
+    "text_gray": [107, 114, 128]
+  },
+  "zones": {
+    "top_bar": {
+      "y_start": 0, "height": 140,
+      "fill_color": [76, 29, 149]
+    },
+    "qr_code": {
+      "position": "top_left",
+      "x": 20, "y": 15, "size": 110,
+      "label": "Scan to RSVP"
+    },
+    "wimlds_logo": {
+      "position": "top_right",
+      "x_from_right": 150, "y": 20, "width": 130
+    },
+    "event_title": {
+      "y": 165, "font_size": 42, "bold": true, "align": "center"
+    },
+    "subtitle": {
+      "y": 220, "font_size": 28, "bold": false, "align": "center"
+    },
+    "session_type": {
+      "y": 260, "font_size": 22, "bold": false, "align": "center"
+    },
+    "timing_pill": {
+      "y": 310,
+      "format": "{Day}  ·  {Date}  ·  {StartTime}–{EndTime} IST",
+      "pill_color": [236, 72, 153]
+    },
+    "speaker_block": {
+      "y_start": 390,
+      "photo_size": 160,
+      "photo_shape": "circle",
+      "supports_multiple": true,
+      "stack_direction": "vertical"
+    },
+    "venue_block": {
+      "y_start": 850,
+      "position": "lower_left",
+      "show_logo": true,
+      "show_address": true,
+      "show_linkedin": false,
+      "show_host_contact": false,
+      "show_mode": false
+    },
+    "gift_sponsor": {
+      "y": 980,
+      "conditional": "gift_sponsor == 'YES'",
+      "label": "🎁 Gift Sponsor: Fragrance Stories",
+      "align": "center"
+    },
+    "partner_logos": {
+      "y_start": 1130,
+      "logos": [
+        {"name": "ABI Group", "file": "abi_group.png"},
+        {"name": "PKC", "file": "pkc.png"},
+        {"name": "GPU Community", "file": "gpu_community.png"},
+        {"name": "Startup Prime", "file": "startup_prime.png"}
+      ],
+      "fixed": true,
+      "note": "These are fixed — always shown regardless of event"
+    }
+  },
+  "not_on_poster": [
+    "mode",
+    "host_contact",
+    "series_block",
+    "linkedin_page"
+  ]
+}

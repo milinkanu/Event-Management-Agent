@@ -1,0 +1,49 @@
+# ── Core (already in main requirements.txt) ──────────────────────────────────
+python-dotenv>=1.0.1
+pydantic>=2.7
+pydantic-settings>=2.3
+requests>=2.32
+tenacity>=8.3
+rich>=13.7
+python-dateutil>=2.9
+click>=8.1
+
+# ── Google APIs ───────────────────────────────────────────────────────────────
+google-auth>=2.30
+google-auth-oauthlib>=1.2
+google-api-python-client>=2.130
+
+# ── LLM ───────────────────────────────────────────────────────────────────────
+# Install at least one:
+anthropic>=0.28          # claude-haiku-4-5-20251001 (free tier), claude-opus-4-6, etc.
+# openai>=1.30           # optional fallback
+
+# ── Testing ───────────────────────────────────────────────────────────────────
+pytest>=8.2
+pytest-mock>=3.14
+
+# ── Optional: email notifications ─────────────────────────────────────────────
+# sendgrid>=6.11
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ADD THESE to your existing requirements.txt
+# Then run:  pip install -r requirements.txt
+# ─────────────────────────────────────────────────────────────────────────────
+
+# WhatsApp — Twilio API
+twilio>=8.5.0
+
+# Twitter / X — OAuth 1.0a posting
+tweepy>=4.14.0
+
+# WhatsApp Web automation (Selenium path)
+selenium>=4.18.0
+webdriver-manager>=4.0.1
+pyperclip>=1.8.2
+
+# HTTP requests (already present — confirm version)
+requests>=2.31.0
+
+langchain-core>=0.2.0
+langgraph>=0.2.0

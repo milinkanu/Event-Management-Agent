@@ -1,0 +1,54 @@
+EXCEL COLUMN GUIDE — Meetup Planning Sheet.xlsx
+================================================
+
+Your sheet already has these columns (keep them exactly as-is):
+  Date
+  Day
+  Title
+  Title1
+  Title2
+  Speaker1             ← Speaker 1 full name
+  Speaker              ← Speaker 1 role / designation  (e.g. "ML Engineer")
+  Mode                 ← online  OR  offline  OR  hybrid
+  Meetup link for Title/Sub Title/QR Code   ← QR code is generated from this URL
+  Venue Sponsar
+  Venue Address
+  Community Parterners
+  Gift Sponsor
+  Status               ← set to "upcoming" to trigger poster generation
+  Email
+  Whatsapp
+  Tagging of gift sponsor
+  Tagging of Venue
+  Tagging of people
+  speakers             ← Speaker 2 full name  (repurposed for Speaker 2)
+
+ADD THESE NEW COLUMNS to your sheet (exact spelling matters):
+  Speaker1_Company     ← Speaker 1 company  (e.g. "Google")
+  Speaker1_Photo       ← Google Drive shareable link for Speaker 1's photo
+  Speaker2_Role        ← Speaker 2 role / designation
+  Speaker2_Company     ← Speaker 2 company
+  Speaker2_Photo       ← Google Drive shareable link for Speaker 2's photo
+  Speaker3             ← Speaker 3 full name  (leave blank if not needed)
+  Speaker3_Role        ← Speaker 3 role / designation
+  Speaker3_Company     ← Speaker 3 company
+  Speaker3_Photo       ← Google Drive shareable link for Speaker 3's photo
+
+HOW SPEAKER COUNT IS DECIDED:
+  Speaker1 filled only        → 1-speaker layout
+  Speaker1 + speakers filled  → 2-speaker layout
+  All three filled            → 3-speaker layout
+
+GOOGLE DRIVE PHOTO LINKS:
+  1. Upload speaker photo to any Google Drive folder
+  2. Right-click → Share → Copy link  (Anyone with the link can view)
+  3. Paste that link into the Speaker1_Photo / Speaker2_Photo / Speaker3_Photo cell
+
+STATUS VALUES:
+  upcoming   → poster will be generated on the next check
+  generated  → poster already created  (agent skips this row)
+  (anything else) → ignored
+
+POSTER FILES ARE UPLOADED TO:
+  My Drive / Poster Automation / generated_posters /
+  Filename: poster_YYYY-MM-DD_speakername.jpg

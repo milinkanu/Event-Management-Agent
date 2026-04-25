@@ -1,0 +1,5 @@
+# Minimum deps for the POC — no API keys needed for any of these
+qrcode[pil]>=7.4
+Pillow>=10.0
+python-dateutil>=2.9
+pytz>=2024.1

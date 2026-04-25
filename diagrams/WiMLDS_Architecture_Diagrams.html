@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WiMLDS Pune Meetup Automation — Architecture & Diagrams</title>
+<style>
+  :root {
+    --brand: #7C3AED;
+    --brand-light: #EDE9FE;
+    --brand-mid: #A78BFA;
+    --accent: #EC4899;
+    --green: #10B981;
+    --blue: #3B82F6;
+    --orange: #F59E0B;
+    --red: #EF4444;
+    --teal: #06B6D4;
+    --gray: #6B7280;
+    --dark: #1F2937;
+    --bg: #F9FAFB;
+    --card: #FFFFFF;
+    --border: #E5E7EB;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--dark); }
+  
+  /* ── Cover ── */
+  .cover {
+    background: linear-gradient(135deg, #4C1D95 0%, #7C3AED 40%, #EC4899 100%);
+    color: white; padding: 60px 40px; text-align: center;
+  }
+  .cover h1 { font-size: 2.4rem; font-weight: 800; letter-spacing: -0.5px; }
+  .cover h2 { font-size: 1.1rem; font-weight: 400; margin-top: 10px; opacity: .85; }
+  .cover .meta { margin-top: 20px; display: flex; justify-content: center; gap: 24px; flex-wrap: wrap; font-size: .85rem; opacity: .8; }
+  
+  /* ── Nav ── */
+  .toc { background: var(--brand-light); padding: 24px 40px; border-bottom: 2px solid var(--brand); }
+  .toc h3 { color: var(--brand); font-size: .85rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+  .toc-links { display: flex; gap: 12px; flex-wrap: wrap; }
+  .toc-links a { background: var(--brand); color: white; padding: 6px 14px; border-radius: 20px; text-decoration: none; font-size: .82rem; font-weight: 600; transition: opacity .2s; }
+  .toc-links a:hover { opacity: .8; }
+  
+  /* ── Sections ── */
+  .section { padding: 40px; max-width: 1400px; margin: 0 auto; }
+  .section-title {
+    font-size: 1.6rem; font-weight: 800; color: var(--brand);
+    border-left: 5px solid var(--brand); padding-left: 16px; margin-bottom: 8px;
+  }
+  .section-subtitle { color: var(--gray); margin-bottom: 28px; padding-left: 21px; font-size: .92rem; }
+  
+  /* ── Diagram containers ── */
+  .diagram-wrap { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 32px; overflow-x: auto; }
+  .diagram-wrap + .diagram-wrap { margin-top: 24px; }
+  
+  /* ── ARCHITECTURE DIAGRAM ── */
+  .arch-grid {
+    display: grid;
+    grid-template-columns: 200px 1fr 200px;
+    grid-template-rows: auto;
+    gap: 20px;
+    min-width: 900px;
+  }
+  
+  /* Layer strips */
+  .layer {
+    border: 2px solid;
+    border-radius: 12px;
+    padding: 12px 16px;
+    position: relative;
+  }
+  .layer-label {
+    position: absolute; top: -12px; left: 14px;
+    background: white; padding: 0 8px;
+    font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+  }
+  .layer-agents { display: flex; flex-wrap: wrap; gap: 10px; padding-top: 8px; }
+  
+  /* Agent boxes */
+  .agent {
+    border-radius: 10px; padding: 10px 14px; min-width: 130px;
+    font-size: .8rem; font-weight: 600;
+    display: flex; flex-direction: column; gap: 4px;
+    border: 1.5px solid;
+  }
+  .agent-icon { font-size: 1.3rem; }
+  .agent-name { font-weight: 700; }
+  .agent-tech { font-size: .68rem; opacity: .75; }
+  
+  /* Color themes */
+  .col-purple { border-color: #7C3AED; background: #EDE9FE; color: #4C1D95; }
+  .col-blue   { border-color: #3B82F6; background: #EFF6FF; color: #1D4ED8; }
+  .col-green  { border-color: #10B981; background: #ECFDF5; color: #065F46; }
+  .col-orange { border-color: #F59E0B; background: #FFFBEB; color: #92400E; }
+  .col-pink   { border-color: #EC4899; background: #FDF2F8; color: #9D174D; }
+  .col-teal   { border-color: #06B6D4; background: #ECFEFF; color: #164E63; }
+  .col-red    { border-color: #EF4444; background: #FEF2F2; color: #991B1B; }
+  .col-gray   { border-color: #6B7280; background: #F9FAFB; color: #374151; }
+  
+  /* Central orchestrator */
+  .orchestrator-box {
+    background: linear-gradient(135deg, #4C1D95, #7C3AED);
+    color: white; border-radius: 14px; padding: 20px 24px;
+    text-align: center; box-shadow: 0 8px 24px rgba(124,58,237,.3);
+    grid-column: 2; grid-row: 2 / 6;
+    display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 10px;
+  }
+  .orchestrator-box h3 { font-size: 1.1rem; }
+  .orchestrator-box p { font-size: .78rem; opacity: .85; }
+  
+  /* Data stores */
+  .store-box {
+    border-radius: 10px; padding: 10px 14px;
+    font-size: .78rem; font-weight: 600;
+    border: 2px dashed;
+    display: flex; align-items: center; gap: 8px;
+  }
+  
+  /* ── WORKFLOW DIAGRAM ── */
+  .workflow {
+    display: flex; flex-direction: column; gap: 0;
+    min-width: 700px;
+  }
+  .wf-phase { margin-bottom: 4px; }
+  .wf-phase-header {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 16px; border-radius: 8px 8px 0 0;
+    font-weight: 700; font-size: .85rem; color: white;
+  }
+  .wf-steps {
+    border: 2px solid;
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    padding: 12px;
+    display: flex; flex-wrap: wrap; gap: 8px;
+    background: white;
+    margin-bottom: 8px;
+  }
+  .wf-step {
+    background: white; border: 1.5px solid;
+    border-radius: 8px; padding: 8px 12px;
+    font-size: .78rem; display: flex; align-items: center; gap: 6px;
+    position: relative;
+  }
+  .wf-step::after {
+    content: '→';
+    position: absolute; right: -14px; top: 50%; transform: translateY(-50%);
+    font-weight: 700; color: var(--gray);
+  }
+  .wf-step:last-child::after { display: none; }
+  .step-num {
+    width: 20px; height: 20px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .7rem; font-weight: 800; color: white; flex-shrink: 0;
+  }
+  
+  /* Arrow between phases */
+  .phase-arrow {
+    text-align: center; padding: 4px 0; color: var(--gray);
+    font-size: 1.2rem; font-weight: 700;
+  }
+  
+  /* ── SEQUENCE DIAGRAM ── */
+  .seq-table { width: 100%; border-collapse: collapse; min-width: 1000px; }
+  .seq-table th {
+    background: var(--brand); color: white;
+    padding: 10px 8px; font-size: .75rem; text-align: center;
+    border: 1px solid var(--brand);
+  }
+  .seq-table td {
+    padding: 6px 8px; border: 1px solid var(--border);
+    font-size: .72rem; vertical-align: top;
+  }
+  .seq-table tr:nth-child(even) td { background: #F8F5FF; }
+  .seq-message {
+    display: inline-block; padding: 3px 8px; border-radius: 12px;
+    font-weight: 600; font-size: .7rem; white-space: nowrap;
+  }
+  .seq-arrow-cell { text-align: center; color: var(--gray); font-size: .85rem; }
+  
+  /* ── DEV APPROACH ── */
+  .approach-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 20px; }
+  .approach-card {
+    background: white; border: 1.5px solid var(--border); border-radius: 12px;
+    padding: 20px; position: relative; overflow: hidden;
+  }
+  .approach-card::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+    width: 4px;
+  }
+  .approach-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 6px; }
+  .approach-card .phase-badge {
+    display: inline-block; font-size: .7rem; font-weight: 700;
+    padding: 2px 10px; border-radius: 12px; margin-bottom: 10px;
+    text-transform: uppercase; letter-spacing: .5px;
+  }
+  .approach-card ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+  .approach-card li { font-size: .8rem; display: flex; gap: 8px; }
+  .approach-card li::before { content: '▸'; flex-shrink: 0; }
+  .tech-stack { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+  .tech-pill {
+    font-size: .68rem; font-weight: 600; padding: 3px 10px;
+    border-radius: 20px; border: 1.5px solid;
+  }
+  
+  /* Legend */
+  .legend { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; font-size: .78rem; }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+  
+  /* Gate boxes in workflow */
+  .gate {
+    background: #FEF3C7; border: 2px solid #F59E0B;
+    border-radius: 8px; padding: 8px 14px;
+    font-size: .78rem; font-weight: 700; color: #92400E;
+    display: flex; align-items: center; gap: 6px;
+    width: 100%;
+  }
+  
+  hr.section-divider { border: none; border-top: 2px solid var(--border); margin: 0 40px; }
+  
+  @media print {
+    .toc { display: none; }
+    .section { padding: 20px; }
+    .cover { padding: 40px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════ COVER ══════════ -->
+<div class="cover">
+  <h1>🤖 WiMLDS Pune Meetup Automation</h1>
+  <h2>Multi-Agent System — Architecture, Workflow, Sequence & Development Approach</h2>
+  <div class="meta">
+    <span>📋 Blueprint v9.0</span>
+    <span>🏗️ 11 Agents · 5 MCP Integrations</span>
+    <span>🔄 End-to-End Event Lifecycle</span>
+    <span>📅 Feb 2026</span>
+  </div>
+</div>
+
+<!-- ══════════ NAV ══════════ -->
+<div class="toc">
+  <h3>Quick Navigation</h3>
+  <div class="toc-links">
+    <a href="#arch">1. Integrated Architecture</a>
+    <a href="#workflow">2. Workflow Diagram</a>
+    <a href="#sequence">3. Sequence Diagram</a>
+    <a href="#approach">4. Development Approach</a>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════
+     SECTION 1 — INTEGRATED ARCHITECTURE DIAGRAM
+     ════════════════════════════════════════════════════ -->
+<div class="section" id="arch">
+  <div class="section-title">1. Integrated Architecture Diagram</div>
+  <div class="section-subtitle">All agents, data stores, integrations, and the central Orchestrator in one view</div>
+
+  <div class="diagram-wrap">
+
+    <!-- LEGEND -->
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#7C3AED"></div> Core / Orchestration</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#3B82F6"></div> Event & Content Creation</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#10B981"></div> Communication & Social</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#F59E0B"></div> Conferencing & Execution</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#EC4899"></div> Post-Event & Analytics</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#06B6D4"></div> Data Stores</div>
+    </div>
+
+    <div style="min-width:900px; display:grid; grid-template-columns:1fr; gap:20px;">
+
+      <!-- ── ROW 1: Trigger ── -->
+      <div style="text-align:center;">
+        <div style="display:inline-block; background:#1F2937; color:white; border-radius:12px; padding:14px 28px; font-weight:700; font-size:.9rem;">
+          👤 Organizer / Sucheta<br><span style="font-size:.75rem;opacity:.7;">Sets row = 'Upcoming' in Master Sheet</span>
+        </div>
+        <div style="font-size:1.8rem;color:#7C3AED;line-height:1.2;">↓</div>
+      </div>
+
+      <!-- ── ROW 2: Data Layer ── -->
+      <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+        <div class="store-box col-teal" style="width:200px;">📊 Google Sheets<br><small>Master Event Sheet (SSOT)</small></div>
+        <div class="store-box col-teal" style="width:200px;">📁 Google Drive<br><small>Event Folder Hierarchy</small></div>
+        <div class="store-box col-teal" style="width:200px;">🔐 Credential Vault<br><small>.env / n8n / Make vault</small></div>
+      </div>
+
+      <div style="font-size:1.8rem;color:#7C3AED;text-align:center;line-height:1.2;">↓</div>
+
+      <!-- ── ROW 3: Orchestrator ── -->
+      <div style="background:linear-gradient(135deg,#4C1D95,#7C3AED);color:white;border-radius:16px;padding:20px 28px;box-shadow:0 8px 24px rgba(124,58,237,.3);">
+        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+          <div style="font-size:2rem;">🎯</div>
+          <div>
+            <div style="font-size:1.1rem;font-weight:800;">ORCHESTRATOR AGENT</div>
+            <div style="font-size:.78rem;opacity:.85;">Validates fields · Sequences agents · Writes back status flags & links · Handles errors & retries</div>
+            <div style="font-size:.72rem;opacity:.7;margin-top:4px;">Tech: Python / LangGraph / CrewAI — reads/writes Google Sheets via MCP</div>
+          </div>
+          <div style="margin-left:auto;display:flex;flex-direction:column;gap:6px;font-size:.72rem;min-width:180px;">
+            <div style="background:rgba(255,255,255,.15);border-radius:6px;padding:4px 10px;">⚠️ Missing fields → Email owner</div>
+            <div style="background:rgba(255,255,255,.15);border-radius:6px;padding:4px 10px;">🔄 State machine: 12 stages</div>
+            <div style="background:rgba(255,255,255,.15);border-radius:6px;padding:4px 10px;">✅ Idempotency via status flags</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="font-size:1.8rem;color:#7C3AED;text-align:center;line-height:1.2;">↓ Dispatches agents in sequence ↓</div>
+
+      <!-- ── ROW 4: Agent Grid ── -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;">
+
+        <!-- Meetup Event Agent -->
+        <div class="agent col-blue" style="min-width:0;">
+          <div class="agent-icon">📅</div>
+          <div class="agent-name">Meetup Event Agent</div>
+          <div>Create/Publish event · Upload poster · Post reminders · Photo album · Post-event update</div>
+          <div class="agent-tech">Meetup OAuth 2.0 API · CrewAI · Headless fallback</div>
+          <div class="agent-tech" style="color:#1D4ED8;font-style:italic;">Neha / Atmaja</div>
+        </div>
+
+        <!-- QR Agent -->
+        <div class="agent col-green" style="min-width:0;">
+          <div class="agent-icon">🔲</div>
+          <div class="agent-name">QR Agent</div>
+          <div>Generate QR PNG from Meetup URL · Save to Drive · Write QR URL to sheet</div>
+          <div class="agent-tech">qrcode lib · Google Drive API</div>
+          <div class="agent-tech" style="color:#065F46;font-style:italic;">Tejal / Relevance.ai / Make.com</div>
+        </div>
+
+        <!-- Poster Agent -->
+        <div class="agent col-purple" style="min-width:0;">
+          <div class="agent-icon">🎨</div>
+          <div class="agent-name">Poster Agent</div>
+          <div>Brand-safe layout · Day·Date·Time · Speaker block · QR top-left · WiMLDS logo top-right · Sponsor logos</div>
+          <div class="agent-tech">Canva API / Pillow / Make.com</div>
+          <div class="agent-tech" style="color:#4C1D95;font-style:italic;">Tejal · Approval loop</div>
+        </div>
+
+        <!-- Social Syndication Agent -->
+        <div class="agent col-green" style="min-width:0;">
+          <div class="agent-icon">📢</div>
+          <div class="agent-name">Social Syndication Agent</div>
+          <div>Announce · T-2d Spotlight · T-1d Logistics · T-2h Bump → LinkedIn, FB, X, Instagram, Meetup Groups</div>
+          <div class="agent-tech">Buffer/Hootsuite/Later API · Make.com</div>
+          <div class="agent-tech" style="color:#065F46;font-style:italic;">Ayush / Chaitanya</div>
+        </div>
+
+        <!-- WhatsApp Helper -->
+        <div class="agent col-orange" style="min-width:0;">
+          <div class="agent-icon">💬</div>
+          <div class="agent-name">WhatsApp Helper Agent</div>
+          <div>Semi-automated WA Web · ~60 groups · Same cadence as social · Confirm-per-send (policy-safe)</div>
+          <div class="agent-tech">WhatsApp Web automation · Selenium</div>
+          <div class="agent-tech" style="color:#92400E;font-style:italic;">Parth/Avishkar/Madhura/Atharva</div>
+        </div>
+
+        <!-- Partner & Media Agent -->
+        <div class="agent col-teal" style="min-width:0;">
+          <div class="agent-icon">🤝</div>
+          <div class="agent-name">Partner & Media Agent</div>
+          <div>Email poster + RSVP to partner leaders · UTM tracking · Personalized greeting · Reciprocity offer</div>
+          <div class="agent-tech">SMTP/SendGrid · Make.com</div>
+          <div class="agent-tech" style="color:#164E63;font-style:italic;">Amit Gujar</div>
+        </div>
+
+        <!-- Conferencing Agent -->
+        <div class="agent col-orange" style="min-width:0;">
+          <div class="agent-icon">🎥</div>
+          <div class="agent-name">Conferencing Agent</div>
+          <div>Create Zoom/Teams/GMeet · Waiting room · Cloud recording · Transcription · Save chat · Write link</div>
+          <div class="agent-tech">Zoom API / MS Teams API · Email trigger</div>
+          <div class="agent-tech" style="color:#92400E;font-style:italic;">Sponsor-licensed accounts</div>
+        </div>
+
+        <!-- Reminders Agent -->
+        <div class="agent col-blue" style="min-width:0;">
+          <div class="agent-icon">⏰</div>
+          <div class="agent-name">Reminders Agent</div>
+          <div>Scheduled T-2d / T-1d / T-2h · Dispatches Social + WA + Meetup · Adds conf link at T-2h if Online/Hybrid</div>
+          <div class="agent-tech">Cron / APScheduler · IST timezone</div>
+          <div class="agent-tech" style="color:#1D4ED8;font-style:italic;">Scheduler + flag checks</div>
+        </div>
+
+        <!-- Event Execution Agent -->
+        <div class="agent col-orange" style="min-width:0;">
+          <div class="agent-icon">🎤</div>
+          <div class="agent-name">Event Execution Agent</div>
+          <div>Verify recording/transcript/chat ON · Collect attendance · Archive PPT/materials to Drive</div>
+          <div class="agent-tech">Google Drive API · Google Forms</div>
+          <div class="agent-tech" style="color:#92400E;font-style:italic;">Speaker form pre-event</div>
+        </div>
+
+        <!-- Post-Event Agent -->
+        <div class="agent col-pink" style="min-width:0;">
+          <div class="agent-icon">✍️</div>
+          <div class="agent-name">Post-Event Agent</div>
+          <div>Transcript → LLM blog draft · Upload photos/recording/slides · LinkedIn gratitude post · Closed-sharing rule</div>
+          <div class="agent-tech">LLM (Claude/GPT) · Drive API · LinkedIn API</div>
+          <div class="agent-tech" style="color:#9D174D;font-style:italic;">Transcript-first pipeline</div>
+        </div>
+
+        <!-- Analytics Agent -->
+        <div class="agent col-red" style="min-width:0;">
+          <div class="agent-icon">📊</div>
+          <div class="agent-name">Analytics Agent</div>
+          <div>Funnel KPIs · Engagement by platform · Ops cadence · Looker Studio / Metabase dashboard</div>
+          <div class="agent-tech">Looker Studio · Metabase · Sheets API</div>
+          <div class="agent-tech" style="color:#991B1B;font-style:italic;">Monthly reports</div>
+        </div>
+
+      </div><!-- /agent grid -->
+
+      <!-- ── ROW 5: Integration Layer ── -->
+      <div style="background:#F1F5F9;border:2px solid #CBD5E1;border-radius:12px;padding:16px 20px;">
+        <div style="font-size:.8rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">🔌 MCP / Integration Layer</div>
+        <div style="display:flex;flex-wrap:wrap;gap:10px;">
+          <div style="background:white;border:1.5px solid #34D399;border-radius:8px;padding:8px 14px;font-size:.75rem;font-weight:600;color:#065F46;">📊 Google Sheets MCP</div>
+          <div style="background:white;border:1.5px solid #60A5FA;border-radius:8px;padding:8px 14px;font-size:.75rem;font-weight:600;color:#1D4ED8;">📁 Google Drive MCP</div>
+          <div style="background:white;border:1.5px solid #F472B6;border-radius:8px;padding:8px 14px;font-size:.75rem;font-weight:600;color:#9D174D;">📅 Meetup API MCP</div>
+          <div style="background:white;border:1.5px solid #FB923C;border-radius:8px;padding:8px 14px;font-size:.75rem;font-weight:600;color:#92400E;">🎥 Zoom/Teams MCP</div>
+          <div style="background:white;border:1.5px solid #A78BFA;border-radius:8px;padding:8px 14px;font-size:.75rem;font-weight:600;color:#4C1D95;">📢 Social Media APIs</div>
+          <div style="background:white;border:1.5px solid #67E8F9;border-radius:8px;padding:8px 14px;font-size:.75rem;font-weight:600;color:#164E63;">📧 SMTP / SendGrid</div>
+          <div style="background:white;border:1.5px solid #FCD34D;border-radius:8px;padding:8px 14px;font-size:.75rem;font-weight:600;color:#92400E;">💬 WhatsApp Web</div>
+          <div style="background:white;border:1.5px solid #6EE7B7;border-radius:8px;padding:8px 14px;font-size:.75rem;font-weight:600;color:#065F46;">🤖 LLM (Claude/GPT)</div>
+        </div>
+      </div>
+
+    </div><!-- /outer grid -->
+  </div><!-- /diagram-wrap -->
+</div>
+
+<hr class="section-divider">
+
+<!-- ════════════════════════════════════════════════════
+     SECTION 2 — WORKFLOW DIAGRAM
+     ════════════════════════════════════════════════════ -->
+<div class="section" id="workflow">
+  <div class="section-title">2. End-to-End Workflow Diagram</div>
+  <div class="section-subtitle">Strict execution order with gates, loops, and branching</div>
+
+  <div class="diagram-wrap">
+    <div class="workflow">
+
+      <!-- PHASE 0: TRIGGER & VALIDATE -->
+      <div class="wf-phase">
+        <div class="wf-phase-header" style="background:#1F2937;">🚦 PHASE 0 · Trigger &amp; Validation</div>
+        <div class="wf-steps" style="border-color:#1F2937;">
+          <div class="wf-step" style="border-color:#1F2937;">
+            <div class="step-num" style="background:#1F2937;">1</div>
+            👤 Organizer sets row = <strong>'Upcoming'</strong>
+          </div>
+          <div class="wf-step" style="border-color:#7C3AED;">
+            <div class="step-num" style="background:#7C3AED;">2</div>
+            🎯 Orchestrator reads Master Sheet
+          </div>
+          <div class="wf-step" style="border-color:#F59E0B;">
+            <div class="step-num" style="background:#F59E0B;">3</div>
+            ✅ Validate all required fields
+          </div>
+        </div>
+        <div class="gate">⚠️ GATE: If any required field is missing → Email owner with bullet list of missing fields → HALT. Resume only when all fields exist.</div>
+      </div>
+      <div class="phase-arrow">↓</div>
+
+      <!-- PHASE 1: EVENT CREATION LOOP -->
+      <div class="wf-phase">
+        <div class="wf-phase-header" style="background:#3B82F6;">📅 PHASE 1 · Event Creation Loop <span style="font-size:.72rem;opacity:.8;">(Cyclic: Meetup → QR → Poster → Meetup)</span></div>
+        <div class="wf-steps" style="border-color:#3B82F6;">
+          <div class="wf-step" style="border-color:#3B82F6;">
+            <div class="step-num" style="background:#3B82F6;">4</div>
+            📅 Meetup Agent creates Draft/Published event
+          </div>
+          <div class="wf-step" style="border-color:#3B82F6;">
+            <div class="step-num" style="background:#3B82F6;">5</div>
+            Returns <strong>Meetup URL + Event ID</strong> → written to sheet
+          </div>
+          <div class="wf-step" style="border-color:#10B981;">
+            <div class="step-num" style="background:#10B981;">6</div>
+            🔲 QR Agent generates QR from Meetup URL
+          </div>
+          <div class="wf-step" style="border-color:#10B981;">
+            <div class="step-num" style="background:#10B981;">7</div>
+            Saves QR PNG → Drive URL written to sheet
+          </div>
+          <div class="wf-step" style="border-color:#7C3AED;">
+            <div class="step-num" style="background:#7C3AED;">8</div>
+            🎨 Poster Agent composes brand-safe poster with QR
+          </div>
+          <div class="wf-step" style="border-color:#7C3AED;">
+            <div class="step-num" style="background:#7C3AED;">9</div>
+            Exports Poster_Final.png → Poster Drive URL to sheet
+          </div>
+        </div>
+        <div class="gate" style="background:#EFF6FF;border-color:#3B82F6;color:#1D4ED8;">🔁 APPROVAL GATE: Poster Drive link sent to speakers &amp; venue sponsors → On change/reject → Rework → Re-export. On approval → proceed.</div>
+        <div class="wf-steps" style="border-color:#3B82F6;margin-top:8px;">
+          <div class="wf-step" style="border-color:#3B82F6;">
+            <div class="step-num" style="background:#3B82F6;">10</div>
+            📅 Meetup Agent uploads approved poster to event <span style="font-size:.7rem;color:#6B7280;">(closes loop)</span>
+          </div>
+        </div>
+      </div>
+      <div class="phase-arrow">↓</div>
+
+      <!-- PHASE 2: ANNOUNCEMENT -->
+      <div class="wf-phase">
+        <div class="wf-phase-header" style="background:#10B981;">📢 PHASE 2 · Announcement (At Publish)</div>
+        <div class="wf-steps" style="border-color:#10B981;">
+          <div class="wf-step" style="border-color:#10B981;">
+            <div class="step-num" style="background:#10B981;">11</div>
+            📢 Social Agent posts Announcement → LinkedIn · Facebook · X · Instagram · Meetup Groups
+          </div>
+          <div class="wf-step" style="border-color:#F59E0B;">
+            <div class="step-num" style="background:#F59E0B;">12</div>
+            💬 WhatsApp Helper posts to ~60 WA Groups <em>(semi-manual, confirm-per-send)</em>
+          </div>
+          <div class="wf-step" style="border-color:#06B6D4;">
+            <div class="step-num" style="background:#06B6D4;">13</div>
+            🤝 Partner/Media Agent sends UTM-tracked email with poster + RSVP
+          </div>
+        </div>
+      </div>
+      <div class="phase-arrow">↓</div>
+
+      <!-- PHASE 3: CONFERENCING -->
+      <div class="wf-phase">
+        <div class="wf-phase-header" style="background:#F59E0B;">🎥 PHASE 3 · Conferencing Setup</div>
+        <div class="wf-steps" style="border-color:#F59E0B;">
+          <div class="wf-step" style="border-color:#F59E0B;">
+            <div class="step-num" style="background:#F59E0B;">14</div>
+            🎥 Conferencing Agent creates Zoom/Teams/GMeet (recording + transcript + save chat ON)
+          </div>
+          <div class="wf-step" style="border-color:#F59E0B;">
+            <div class="step-num" style="background:#F59E0B;">15</div>
+            Conference Link → written to sheet
+          </div>
+          <div class="wf-step" style="border-color:#F59E0B;">
+            <div class="step-num" style="background:#F59E0B;">16</div>
+            If Online/Hybrid → Meetup Agent adds link to event description
+          </div>
+        </div>
+      </div>
+      <div class="phase-arrow">↓</div>
+
+      <!-- PHASE 4: SCHEDULED REMINDERS -->
+      <div class="wf-phase">
+        <div class="wf-phase-header" style="background:#6366F1;">⏰ PHASE 4 · Scheduled Reminders</div>
+        <div class="wf-steps" style="border-color:#6366F1;flex-direction:column;gap:12px;">
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+            <div style="background:#EEF2FF;border:1.5px solid #6366F1;border-radius:8px;padding:8px 12px;font-size:.78rem;font-weight:700;color:#3730A3;min-width:100px;">📅 T-2 Days<br><span style="font-weight:400;">Speaker Spotlight</span></div>
+            <span style="color:#6B7280;font-size:.85rem;">→</span>
+            <div class="wf-step" style="border-color:#6366F1;flex:1;">Speaker bio + achievements + learning outcomes → All channels + WA Groups</div>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+            <div style="background:#EEF2FF;border:1.5px solid #6366F1;border-radius:8px;padding:8px 12px;font-size:.78rem;font-weight:700;color:#3730A3;min-width:100px;">📅 T-1 Day<br><span style="font-weight:400;">Logistics</span></div>
+            <span style="color:#6B7280;font-size:.85rem;">→</span>
+            <div class="wf-step" style="border-color:#6366F1;flex:1;">Security · Parking · Laptop · Wi-Fi · Host contact → All channels + WA Groups</div>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+            <div style="background:#EEF2FF;border:1.5px solid #6366F1;border-radius:8px;padding:8px 12px;font-size:.78rem;font-weight:700;color:#3730A3;min-width:100px;">⏰ T-2 Hours<br><span style="font-weight:400;">Final Bump</span></div>
+            <span style="color:#6B7280;font-size:.85rem;">→</span>
+            <div class="wf-step" style="border-color:#6366F1;flex:1;">Final reminder + entrance note + host + conference link (if Online/Hybrid) → All channels</div>
+          </div>
+          <div style="font-size:.75rem;color:#6B7280;padding:4px 0;">All reminders mirrored via Meetup Contact Attendees / Event Posts</div>
+        </div>
+      </div>
+      <div class="phase-arrow">↓</div>
+
+      <!-- PHASE 5: EVENT DAY -->
+      <div class="wf-phase">
+        <div class="wf-phase-header" style="background:#F59E0B;">🎤 PHASE 5 · Event Day Execution</div>
+        <div class="wf-steps" style="border-color:#F59E0B;">
+          <div class="wf-step" style="border-color:#F59E0B;">
+            <div class="step-num" style="background:#F59E0B;">17</div>
+            🎤 Event Exec Agent verifies: recording ✅ · transcript ✅ · chat-saving ✅
+          </div>
+          <div class="wf-step" style="border-color:#F59E0B;">
+            <div class="step-num" style="background:#F59E0B;">18</div>
+            Collect attendance · archive shared docs/polls
+          </div>
+          <div class="wf-step" style="border-color:#F59E0B;">
+            <div class="step-num" style="background:#F59E0B;">19</div>
+            Speaker uploads PPT via pre-event Google Form → saved to /04_Presentations/
+          </div>
+        </div>
+      </div>
+      <div class="phase-arrow">↓</div>
+
+      <!-- PHASE 6: POST-EVENT -->
+      <div class="wf-phase">
+        <div class="wf-phase-header" style="background:#EC4899;">✍️ PHASE 6 · Post-Event Pipeline</div>
+        <div class="wf-steps" style="border-color:#EC4899;flex-direction:column;gap:8px;">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <div class="step-num" style="background:#EC4899;width:24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:50%;font-size:.7rem;font-weight:800;color:white;flex-shrink:0;">20</div>
+            <div style="font-size:.8rem;">Upload Transcript (~3.5h) to /03_Transcript/</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <div class="step-num" style="background:#EC4899;width:24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:50%;font-size:.7rem;font-weight:800;color:white;flex-shrink:0;">21</div>
+            <div style="font-size:.8rem;">🤖 LLM generates: Summary · Top Takeaways · Insights · Blog Draft → saved to /05_Blogs_Drafts/</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <div class="step-num" style="background:#EC4899;width:24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:50%;font-size:.7rem;font-weight:800;color:white;flex-shrink:0;">22</div>
+            <div style="font-size:.8rem;">Upload Photos · Recording · Slides to respective Drive folders</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <div class="step-num" style="background:#EC4899;width:24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:50%;font-size:.7rem;font-weight:800;color:white;flex-shrink:0;">23</div>
+            <div style="font-size:.8rem;">LinkedIn Post: 4-5 photos + Gratitude (tag speakers, sponsors, C-level) + CTA: Follow WiMLDS</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <div class="step-num" style="background:#EC4899;width:24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:50%;font-size:.7rem;font-weight:800;color:white;flex-shrink:0;">24</div>
+            <div style="font-size:.8rem;">Meetup: Upload photo album + post consolidated resources (blog + recording + slides)</div>
+          </div>
+          <div class="gate" style="background:#FDF2F8;border-color:#EC4899;color:#9D174D;margin-top:4px;">🔒 CLOSED SHARING RULE: Recording/Transcript/Slides ONLY shared inside Meetup &amp; closed WA Groups. Never on public social media.</div>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <div class="step-num" style="background:#EC4899;width:24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:50%;font-size:.7rem;font-weight:800;color:white;flex-shrink:0;">25</div>
+            <div style="font-size:.8rem;">Set PostEvent_Completed? = Y · Confirm all links in sheet</div>
+          </div>
+        </div>
+      </div>
+      <div class="phase-arrow">↓</div>
+
+      <!-- PHASE 7: ANALYTICS -->
+      <div class="wf-phase">
+        <div class="wf-phase-header" style="background:#EF4444;">📊 PHASE 7 · Analytics &amp; Reporting</div>
+        <div class="wf-steps" style="border-color:#EF4444;">
+          <div class="wf-step" style="border-color:#EF4444;">
+            <div class="step-num" style="background:#EF4444;">26</div>
+            📊 Analytics Agent updates Looker Studio / Metabase dashboard
+          </div>
+          <div class="wf-step" style="border-color:#EF4444;">
+            <div class="step-num" style="background:#EF4444;">27</div>
+            KPIs: Funnel · Engagement · Content · Ops Cadence · Segmentation
+          </div>
+          <div class="wf-step" style="border-color:#EF4444;">
+            <div class="step-num" style="background:#EF4444;">28</div>
+            📧 Completion email summary sent to Organizer
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /workflow -->
+  </div><!-- /diagram-wrap -->
+</div>
+
+<hr class="section-divider">
+
+<!-- ════════════════════════════════════════════════════
+     SECTION 3 — SEQUENCE DIAGRAM
+     ════════════════════════════════════════════════════ -->
+<div class="section" id="sequence">
+  <div class="section-title">3. Sequence Diagram (Swimlane)</div>
+  <div class="section-subtitle">Message flow across all lanes: who sends what to whom, and when</div>
+
+  <div class="diagram-wrap" style="overflow-x:auto;">
+
+    <!-- Key -->
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;font-size:.75rem;">
+      <div style="display:flex;align-items:center;gap:6px;"><div style="width:32px;height:4px;background:#7C3AED;border-radius:2px;"></div>Orchestration</div>
+      <div style="display:flex;align-items:center;gap:6px;"><div style="width:32px;height:4px;background:#3B82F6;border-radius:2px;"></div>Event Creation</div>
+      <div style="display:flex;align-items:center;gap:6px;"><div style="width:32px;height:4px;background:#10B981;border-radius:2px;"></div>Social/Comms</div>
+      <div style="display:flex;align-items:center;gap:6px;"><div style="width:32px;height:4px;background:#F59E0B;border-radius:2px;"></div>Conferencing</div>
+      <div style="display:flex;align-items:center;gap:6px;"><div style="width:32px;height:4px;background:#EC4899;border-radius:2px;"></div>Post-Event</div>
+    </div>
+
+    <table class="seq-table">
+      <thead>
+        <tr>
+          <th style="width:40px;">#</th>
+          <th>From</th>
+          <th>To</th>
+          <th>Message / Action</th>
+          <th>Output / Response</th>
+          <th>Sheet Update</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td colspan="6" style="background:#374151;color:white;font-weight:700;text-align:center;font-size:.75rem;padding:6px;">── SETUP & VALIDATION ──</td></tr>
+        <tr>
+          <td>1</td><td>👤 Organizer</td><td>📊 Master Sheet</td>
+          <td><span class="seq-message" style="background:#EDE9FE;color:#4C1D95;">Set Event Status = 'Upcoming'</span></td>
+          <td>Row flagged for processing</td><td>Event_Status = Upcoming</td>
+        </tr>
+        <tr>
+          <td>2</td><td>🎯 Orchestrator</td><td>📊 Master Sheet</td>
+          <td><span class="seq-message" style="background:#EDE9FE;color:#4C1D95;">Read &amp; validate all required fields</span></td>
+          <td>Field map: present / missing</td><td>—</td>
+        </tr>
+        <tr>
+          <td>3</td><td>🎯 Orchestrator</td><td>👤 Organizer</td>
+          <td><span class="seq-message" style="background:#FEF3C7;color:#92400E;">IF missing: Email "Update fields: &lt;list&gt;" → HALT</span></td>
+          <td>Email delivered; workflow paused</td><td>—</td>
+        </tr>
+        <tr><td colspan="6" style="background:#374151;color:white;font-weight:700;text-align:center;font-size:.75rem;padding:6px;">── EVENT CREATION LOOP ──</td></tr>
+        <tr>
+          <td>4</td><td>🎯 Orchestrator</td><td>📅 Meetup Agent</td>
+          <td><span class="seq-message" style="background:#EFF6FF;color:#1D4ED8;">Create Draft or Publish event (OAuth)</span></td>
+          <td>Meetup URL + Event ID</td><td>MeetupURL, MeetupEventID</td>
+        </tr>
+        <tr>
+          <td>5</td><td>🎯 Orchestrator</td><td>🔲 QR Agent</td>
+          <td><span class="seq-message" style="background:#ECFDF5;color:#065F46;">Generate QR from Meetup URL</span></td>
+          <td>QR PNG → Drive URL</td><td>QR_Drive_URL</td>
+        </tr>
+        <tr>
+          <td>6</td><td>🎯 Orchestrator</td><td>🎨 Poster Agent</td>
+          <td><span class="seq-message" style="background:#EDE9FE;color:#4C1D95;">Build poster (QR + speaker + timing + venue + logos)</span></td>
+          <td>Poster_Final.png → Drive URL</td><td>Poster_Drive_URL, Poster_Status=Draft</td>
+        </tr>
+        <tr>
+          <td>7</td><td>🎨 Poster Agent</td><td>👤 Speakers/Sponsors</td>
+          <td><span class="seq-message" style="background:#FEF3C7;color:#92400E;">Send Drive link for approval</span></td>
+          <td>Approval / Change request</td><td>Poster_Status=Approved/Rework</td>
+        </tr>
+        <tr>
+          <td>8</td><td>🎯 Orchestrator</td><td>📅 Meetup Agent</td>
+          <td><span class="seq-message" style="background:#EFF6FF;color:#1D4ED8;">Upload approved poster to event image</span></td>
+          <td>Poster live on Meetup</td><td>Poster_Meetup_URL</td>
+        </tr>
+        <tr><td colspan="6" style="background:#374151;color:white;font-weight:700;text-align:center;font-size:.75rem;padding:6px;">── ANNOUNCEMENT ──</td></tr>
+        <tr>
+          <td>9</td><td>🎯 Orchestrator</td><td>📢 Social Agent</td>
+          <td><span class="seq-message" style="background:#ECFDF5;color:#065F46;">Post Announcement → LI/FB/X/IG/Meetup Groups</span></td>
+          <td>Posts live; post IDs returned</td><td>Announce_Sent? = Y</td>
+        </tr>
+        <tr>
+          <td>10</td><td>🎯 Orchestrator</td><td>💬 WA Helper</td>
+          <td><span class="seq-message" style="background:#FFFBEB;color:#92400E;">Post announcement to ~60 WA Groups</span></td>
+          <td>Semi-manual confirms</td><td>Whatsapp_Groups_Posted? = Y</td>
+        </tr>
+        <tr>
+          <td>11</td><td>🎯 Orchestrator</td><td>🤝 Partner Agent</td>
+          <td><span class="seq-message" style="background:#ECFEFF;color:#164E63;">Email poster + UTM RSVP to partner list</span></td>
+          <td>Email delivered; UTM logged</td><td>Partners_Notified? = Y</td>
+        </tr>
+        <tr><td colspan="6" style="background:#374151;color:white;font-weight:700;text-align:center;font-size:.75rem;padding:6px;">── CONFERENCING SETUP ──</td></tr>
+        <tr>
+          <td>12</td><td>🎯 Orchestrator</td><td>🎥 Conf. Agent</td>
+          <td><span class="seq-message" style="background:#FFFBEB;color:#92400E;">Create Zoom/Teams: recording+transcript+chat ON</span></td>
+          <td>Conference Link</td><td>Conference_Link</td>
+        </tr>
+        <tr>
+          <td>13</td><td>🎥 Conf. Agent</td><td>📅 Meetup Agent</td>
+          <td><span class="seq-message" style="background:#EFF6FF;color:#1D4ED8;">IF Online/Hybrid: Insert conf link in description</span></td>
+          <td>Meetup description updated</td><td>—</td>
+        </tr>
+        <tr><td colspan="6" style="background:#374151;color:white;font-weight:700;text-align:center;font-size:.75rem;padding:6px;">── SCHEDULED REMINDERS ──</td></tr>
+        <tr>
+          <td>14</td><td>⏰ Reminders Agent</td><td>📢 Social + 💬 WA + 📅 Meetup</td>
+          <td><span class="seq-message" style="background:#EEF2FF;color:#3730A3;">T-2 Days: Speaker Spotlight blast</span></td>
+          <td>Posts + WA messages sent</td><td>Tminus2_Sent? = Y</td>
+        </tr>
+        <tr>
+          <td>15</td><td>⏰ Reminders Agent</td><td>📢 Social + 💬 WA + 📅 Meetup</td>
+          <td><span class="seq-message" style="background:#EEF2FF;color:#3730A3;">T-1 Day: Logistics (security/parking/laptop/host)</span></td>
+          <td>Posts + WA messages sent</td><td>Tminus1_Sent? = Y</td>
+        </tr>
+        <tr>
+          <td>16</td><td>⏰ Reminders Agent</td><td>📢 Social + 💬 WA + 📅 Meetup</td>
+          <td><span class="seq-message" style="background:#EEF2FF;color:#3730A3;">T-2 Hours: Final bump (+ conf link if online/hybrid)</span></td>
+          <td>Posts + WA messages sent</td><td>Tminus2h_Sent? = Y</td>
+        </tr>
+        <tr><td colspan="6" style="background:#374151;color:white;font-weight:700;text-align:center;font-size:.75rem;padding:6px;">── EVENT DAY ──</td></tr>
+        <tr>
+          <td>17</td><td>🎥 Conf. Agent</td><td>🎤 Event Exec Agent</td>
+          <td><span class="seq-message" style="background:#FFFBEB;color:#92400E;">Start call; verify recording/transcript/chat</span></td>
+          <td>Session running; all recording confirmed</td><td>—</td>
+        </tr>
+        <tr>
+          <td>18</td><td>🎤 Event Exec</td><td>📁 Google Drive</td>
+          <td><span class="seq-message" style="background:#ECFDF5;color:#065F46;">Save PPT/materials to /04_Presentations/</span></td>
+          <td>Files archived</td><td>PPT_Link</td>
+        </tr>
+        <tr><td colspan="6" style="background:#374151;color:white;font-weight:700;text-align:center;font-size:.75rem;padding:6px;">── POST-EVENT PIPELINE ──</td></tr>
+        <tr>
+          <td>19</td><td>👤 Organizer</td><td>✍️ Post-Event Agent</td>
+          <td><span class="seq-message" style="background:#FDF2F8;color:#9D174D;">Upload Photos / Recording / Transcript / Slides</span></td>
+          <td>Assets in Drive folders</td><td>—</td>
+        </tr>
+        <tr>
+          <td>20</td><td>✍️ Post-Event Agent</td><td>🤖 LLM</td>
+          <td><span class="seq-message" style="background:#FDF2F8;color:#9D174D;">Process transcript → Summary + Takeaways + Blog</span></td>
+          <td>Markdown blog draft</td><td>Blog_Link</td>
+        </tr>
+        <tr>
+          <td>21</td><td>✍️ Post-Event Agent</td><td>📢 Social Agent</td>
+          <td><span class="seq-message" style="background:#ECFDF5;color:#065F46;">LinkedIn: 4-5 photos + gratitude + tag C-level + CTA</span></td>
+          <td>LinkedIn post live</td><td>PostEvent_Update_Sent? = Y</td>
+        </tr>
+        <tr>
+          <td>22</td><td>✍️ Post-Event Agent</td><td>📅 Meetup Agent</td>
+          <td><span class="seq-message" style="background:#EFF6FF;color:#1D4ED8;">Upload photo album + consolidated resources post</span></td>
+          <td>Meetup updated</td><td>Recording_Link, Transcript_Link</td>
+        </tr>
+        <tr>
+          <td>23</td><td>✍️ Post-Event Agent</td><td>💬 WA Helper</td>
+          <td><span class="seq-message" style="background:#FFFBEB;color:#92400E;">Share recording/transcript/slides in closed WA groups ONLY</span></td>
+          <td>Links shared (closed)</td><td>PostEvent_Completed? = Y</td>
+        </tr>
+        <tr><td colspan="6" style="background:#374151;color:white;font-weight:700;text-align:center;font-size:.75rem;padding:6px;">── ANALYTICS ──</td></tr>
+        <tr>
+          <td>24</td><td>📊 Analytics Agent</td><td>📊 Sheet/Dashboard</td>
+          <td><span class="seq-message" style="background:#FEF2F2;color:#991B1B;">Aggregate KPIs → Update Looker Studio / Metabase</span></td>
+          <td>Dashboard live</td><td>All metric columns updated</td>
+        </tr>
+        <tr>
+          <td>25</td><td>📊 Analytics Agent</td><td>👤 Organizer</td>
+          <td><span class="seq-message" style="background:#FEF2F2;color:#991B1B;">Send completion email summary</span></td>
+          <td>Email with KPI snapshot</td><td>—</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<hr class="section-divider">
+
+<!-- ════════════════════════════════════════════════════
+     SECTION 4 — DEVELOPMENT APPROACH
+     ════════════════════════════════════════════════════ -->
+<div class="section" id="approach">
+  <div class="section-title">4. Development Approach &amp; Steps</div>
+  <div class="section-subtitle">Phased build plan — from foundations to full deployment</div>
+
+  <div class="approach-grid">
+
+    <!-- PHASE 1 -->
+    <div class="approach-card" style="border-color:#7C3AED;">
+      <div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:#7C3AED;border-radius:4px 0 0 4px;"></div>
+      <div class="phase-badge" style="background:#EDE9FE;color:#4C1D95;">Phase 1 · Foundation (Week 1–2)</div>
+      <h3>🏗️ Infrastructure &amp; Data Layer</h3>
+      <ul>
+        <li>Set up Google Sheets Master Schema (all required + optional fields, status flags)</li>
+        <li>Create Google Drive folder hierarchy template (auto-provision per event)</li>
+        <li>Configure credential vault: n8n / Make.com / .env with OAuth tokens</li>
+        <li>Implement Google Sheets MCP connector (read/write, row-level locking)</li>
+        <li>Build IST-aware timestamp utilities and field validation library</li>
+        <li>Write missing-field detection + email alert template (Appendix B)</li>
+      </ul>
+      <div class="tech-stack">
+        <div class="tech-pill" style="border-color:#7C3AED;color:#4C1D95;">Google Sheets API</div>
+        <div class="tech-pill" style="border-color:#7C3AED;color:#4C1D95;">Google Drive API</div>
+        <div class="tech-pill" style="border-color:#7C3AED;color:#4C1D95;">Python / pytz</div>
+        <div class="tech-pill" style="border-color:#7C3AED;color:#4C1D95;">SMTP</div>
+      </div>
+    </div>
+
+    <!-- PHASE 2 -->
+    <div class="approach-card" style="border-color:#3B82F6;">
+      <div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:#3B82F6;border-radius:4px 0 0 4px;"></div>
+      <div class="phase-badge" style="background:#EFF6FF;color:#1D4ED8;">Phase 2 · Orchestrator (Week 2–3)</div>
+      <h3>🎯 Orchestrator Agent Core</h3>
+      <ul>
+        <li>Build state machine: 12 stages with transition guards and idempotency via status flags</li>
+        <li>Implement row-change trigger (polling or webhook on Sheet)</li>
+        <li>Design agent dispatch protocol: async task queue with retry logic</li>
+        <li>Write-back subsystem: update flags, URLs, timestamps atomically</li>
+        <li>Error handling: catch, log, notify organizer; never leave partial state</li>
+        <li>Unit test all transitions including missing-field and retry paths</li>
+      </ul>
+      <div class="tech-stack">
+        <div class="tech-pill" style="border-color:#3B82F6;color:#1D4ED8;">LangGraph / CrewAI</div>
+        <div class="tech-pill" style="border-color:#3B82F6;color:#1D4ED8;">Python asyncio</div>
+        <div class="tech-pill" style="border-color:#3B82F6;color:#1D4ED8;">Redis (state)</div>
+        <div class="tech-pill" style="border-color:#3B82F6;color:#1D4ED8;">pytest</div>
+      </div>
+    </div>
+
+    <!-- PHASE 3 -->
+    <div class="approach-card" style="border-color:#3B82F6;">
+      <div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:#3B82F6;border-radius:4px 0 0 4px;"></div>
+      <div class="phase-badge" style="background:#EFF6FF;color:#1D4ED8;">Phase 3 · Event Creation (Week 3–4)</div>
+      <h3>📅 Meetup + QR + Poster Agents</h3>
+      <ul>
+        <li>Meetup Agent: OAuth 2.0 flow, create/publish event, return URL+ID, headless fallback</li>
+        <li>QR Agent: qrcode library, generate PNG, upload to Drive, return URL</li>
+        <li>Poster Agent: brand-safe layout engine (Pillow/Canva API), all zones per spec</li>
+        <li>Implement approval loop: send Drive link → poll for response → rework or proceed</li>
+        <li>Meetup poster upload after approval (closes the cyclic dependency loop)</li>
+        <li>Naming convention enforcement (Appendix D)</li>
+      </ul>
+      <div class="tech-stack">
+        <div class="tech-pill" style="border-color:#3B82F6;color:#1D4ED8;">Meetup OAuth API</div>
+        <div class="tech-pill" style="border-color:#3B82F6;color:#1D4ED8;">qrcode lib</div>
+        <div class="tech-pill" style="border-color:#3B82F6;color:#1D4ED8;">Pillow / Canva API</div>
+        <div class="tech-pill" style="border-color:#3B82F6;color:#1D4ED8;">Make.com</div>
+      </div>
+    </div>
+
+    <!-- PHASE 4 -->
+    <div class="approach-card" style="border-color:#10B981;">
+      <div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:#10B981;border-radius:4px 0 0 4px;"></div>
+      <div class="phase-badge" style="background:#ECFDF5;color:#065F46;">Phase 4 · Social & Comms (Week 4–5)</div>
+      <h3>📢 Social Syndication + WhatsApp + Partner Agents</h3>
+      <ul>
+        <li>Social Agent: integrate LinkedIn, Facebook, X, Instagram APIs via Make.com/Buffer</li>
+        <li>Message templates with variable substitution (Appendix A templates A1–A4)</li>
+        <li>Save all drafts to /03_Social_Copies/ before posting</li>
+        <li>WA Helper: Selenium/WhatsApp Web semi-automation, confirm-per-group flow</li>
+        <li>Partner Agent: personalized email via SendGrid, UTM parameter generation</li>
+        <li>Sheet flags: Announce_Sent?, Whatsapp_Groups_Posted?, Partners_Notified?</li>
+      </ul>
+      <div class="tech-stack">
+        <div class="tech-pill" style="border-color:#10B981;color:#065F46;">Buffer / Hootsuite</div>
+        <div class="tech-pill" style="border-color:#10B981;color:#065F46;">LinkedIn API</div>
+        <div class="tech-pill" style="border-color:#10B981;color:#065F46;">Selenium</div>
+        <div class="tech-pill" style="border-color:#10B981;color:#065F46;">SendGrid</div>
+      </div>
+    </div>
+
+    <!-- PHASE 5 -->
+    <div class="approach-card" style="border-color:#F59E0B;">
+      <div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:#F59E0B;border-radius:4px 0 0 4px;"></div>
+      <div class="phase-badge" style="background:#FFFBEB;color:#92400E;">Phase 5 · Conferencing & Reminders (Week 5–6)</div>
+      <h3>🎥 Conferencing + ⏰ Reminders Agents</h3>
+      <ul>
+        <li>Conferencing Agent: Zoom/Teams API or GMeet (sponsor licensed), apply security checklist</li>
+        <li>Conditional: if Online/Hybrid → inject link into Meetup description</li>
+        <li>Reminders Agent: cron jobs in IST for T-2d / T-1d / T-2h</li>
+        <li>Each reminder dispatches Social + WA + Meetup Contact Attendees in parallel</li>
+        <li>T-2h adds conference link if mode is Online or Hybrid</li>
+        <li>Guard all sends with flag checks to prevent duplicates (idempotent)</li>
+      </ul>
+      <div class="tech-stack">
+        <div class="tech-pill" style="border-color:#F59E0B;color:#92400E;">Zoom API</div>
+        <div class="tech-pill" style="border-color:#F59E0B;color:#92400E;">MS Teams API</div>
+        <div class="tech-pill" style="border-color:#F59E0B;color:#92400E;">APScheduler</div>
+        <div class="tech-pill" style="border-color:#F59E0B;color:#92400E;">Celery</div>
+      </div>
+    </div>
+
+    <!-- PHASE 6 -->
+    <div class="approach-card" style="border-color:#EC4899;">
+      <div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:#EC4899;border-radius:4px 0 0 4px;"></div>
+      <div class="phase-badge" style="background:#FDF2F8;color:#9D174D;">Phase 6 · Post-Event (Week 6–7)</div>
+      <h3>✍️ Post-Event + Event Execution Agents</h3>
+      <ul>
+        <li>Event Exec Agent: Google Forms for speaker material upload pre-event</li>
+        <li>Verify-on-start checklist: recording ✅ transcript ✅ chat ✅</li>
+        <li>Post-Event Agent: transcript → LLM (Claude/GPT) → structured blog output</li>
+        <li>LinkedIn post builder: photo selection, gratitude copy, C-level tagging</li>
+        <li>Enforce closed-sharing rule: Recording/Transcript/Slides → Meetup + closed WA only</li>
+        <li>Meetup photo album upload + consolidated resources post</li>
+        <li>Finalize all sheet links and set PostEvent_Completed? = Y</li>
+      </ul>
+      <div class="tech-stack">
+        <div class="tech-pill" style="border-color:#EC4899;color:#9D174D;">Claude / GPT API</div>
+        <div class="tech-pill" style="border-color:#EC4899;color:#9D174D;">Google Forms</div>
+        <div class="tech-pill" style="border-color:#EC4899;color:#9D174D;">Drive API</div>
+        <div class="tech-pill" style="border-color:#EC4899;color:#9D174D;">LinkedIn API</div>
+      </div>
+    </div>
+
+    <!-- PHASE 7 -->
+    <div class="approach-card" style="border-color:#EF4444;">
+      <div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:#EF4444;border-radius:4px 0 0 4px;"></div>
+      <div class="phase-badge" style="background:#FEF2F2;color:#991B1B;">Phase 7 · Analytics (Week 7–8)</div>
+      <h3>📊 Analytics Agent + Dashboard</h3>
+      <ul>
+        <li>Aggregate per-event KPIs from Sheet + platform APIs into analytics table</li>
+        <li>Build Looker Studio / Metabase dashboard: funnel, engagement, ops cadence, segmentation</li>
+        <li>Automated completion email with KPI snapshot to organizer</li>
+        <li>Month-over-month growth tracking toward 10,000 Meetup members goal (March 2026)</li>
+        <li>Partner uplift measurement via UTM data</li>
+      </ul>
+      <div class="tech-stack">
+        <div class="tech-pill" style="border-color:#EF4444;color:#991B1B;">Looker Studio</div>
+        <div class="tech-pill" style="border-color:#EF4444;color:#991B1B;">Metabase</div>
+        <div class="tech-pill" style="border-color:#EF4444;color:#991B1B;">BigQuery</div>
+        <div class="tech-pill" style="border-color:#EF4444;color:#991B1B;">pandas</div>
+      </div>
+    </div>
+
+    <!-- PHASE 8 -->
+    <div class="approach-card" style="border-color:#6B7280;">
+      <div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:#6B7280;border-radius:4px 0 0 4px;"></div>
+      <div class="phase-badge" style="background:#F9FAFB;color:#374151;">Phase 8 · Hardening (Week 8–9)</div>
+      <h3>🔐 Security, Testing &amp; Deployment</h3>
+      <ul>
+        <li>Credential rotation policy (~60 days); 2FA on primary organizer accounts</li>
+        <li>Closed-sharing enforcement tests: assert no Recording/Transcript/Slides on public social</li>
+        <li>End-to-end integration tests for full event lifecycle (dry-run mode)</li>
+        <li>Error simulation: missing fields, API failures, approval rejections, retry exhaustion</li>
+        <li>Rate-limit handling for all APIs (Meetup free tier, social platforms)</li>
+        <li>Deploy to cloud (GCP / Railway) with monitoring + alerting</li>
+      </ul>
+      <div class="tech-stack">
+        <div class="tech-pill" style="border-color:#6B7280;color:#374151;">pytest / integration</div>
+        <div class="tech-pill" style="border-color:#6B7280;color:#374151;">GCP / Railway</div>
+        <div class="tech-pill" style="border-color:#6B7280;color:#374151;">Sentry</div>
+        <div class="tech-pill" style="border-color:#6B7280;color:#374151;">GitHub Actions</div>
+      </div>
+    </div>
+
+  </div><!-- /approach-grid -->
+
+  <!-- AGENT–TEAM MAPPING TABLE -->
+  <div class="diagram-wrap" style="margin-top:28px;">
+    <div style="font-size:1rem;font-weight:700;color:#374151;margin-bottom:16px;">👥 Agent ↔ Team Member Ownership Map</div>
+    <table style="width:100%;border-collapse:collapse;font-size:.8rem;">
+      <thead>
+        <tr style="background:#4C1D95;color:white;">
+          <th style="padding:10px 12px;text-align:left;border:1px solid #7C3AED;">Agent</th>
+          <th style="padding:10px 12px;text-align:left;border:1px solid #7C3AED;">Owner(s)</th>
+          <th style="padding:10px 12px;text-align:left;border:1px solid #7C3AED;">Approach</th>
+          <th style="padding:10px 12px;text-align:left;border:1px solid #7C3AED;">Primary Tool</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="background:#FAFAFA;"><td style="padding:8px 12px;border:1px solid #E5E7EB;">🎯 Orchestrator</td><td style="padding:8px 12px;border:1px solid #E5E7EB;">Core Team</td><td style="padding:8px 12px;border:1px solid #E5E7EB;">Code</td><td style="padding:8px 12px;border:1px solid #E5E7EB;">LangGraph / CrewAI</td></tr>
+        <tr><td style="padding:8px 12px;border:1px solid #E5E7EB;">📅 Meetup Event</td><td style="padding:8px 12px;border:1px solid #E5E7EB;">Neha, Atmaja</td><td style="padding:8px 12px;border:1px solid #E5E7EB;">Code</td><td style="padding:8px 12px;border:1px solid #E5E7EB;">CrewAI + Meetup OAuth API</td></tr>
+        <tr style="background:#FAFAFA;"><td style="padding:8px 12px;border:1px solid #E5E7EB;">🔲 QR Agent</td><td style="padding:8px 12px;border:1px solid #E5E7EB;">Tejal</td><td style="padding:8px 12px;border:1px solid #E5E7EB;">No-code</td><td style="padding:8px 12px;border:1px solid #E5E7EB;">Relevance.ai / Make.com</td></tr>
+        <tr><td style="padding:8px 12px;border:1px solid #E5E7EB;">🎨 Poster Agent</td><td style="padding:8px 12px;border:1px solid #E5E7EB;">Tejal / Apeksha</td><td style="padding:8px 12px;border:1px solid #E5E7EB;">No-code</td><td style="padding:8px 12px;border:1px solid #E5E7EB;">Relevance.ai / Make.com / Canva API</td></tr>
+        <tr style="background:#FAFAFA;"><td style="padding:8px 12px;border:1px solid #E5E7EB;">📢 Social Syndication</td><td style="padding:8px 12px;border:1px solid #E5E7EB;">Ayush, Chaitanya</td><td style="padding:8px 12px;border:1px solid #E5E7EB;">No-code + Code</td><td style="padding:8px 12px;border:1px solid #E5E7EB;">Make.com + custom scripts</td></tr>
+        <tr><td style="padding:8px 12px;border:1px solid #E5E7EB;">💬 WhatsApp Helper</td><td style="padding:8px 12px;border:1px solid #E5E7EB;">Parth/Avishkar/Madhura/Atharva</td><td style="padding:8px 12px;border:1px solid #E5E7EB;">Semi-manual</td><td style="padding:8px 12px;border:1px solid #E5E7EB;">WhatsApp Web / Selenium</td></tr>
+        <tr style="background:#FAFAFA;"><td style="padding:8px 12px;border:1px solid #E5E7EB;">🤝 Partner & Media</td><td style="padding:8px 12px;border:1px solid #E5E7EB;">Amit Gujar</td><td style="padding:8px 12px;border:1px solid #E5E7EB;">No-code/Low-code</td><td style="padding:8px 12px;border:1px solid #E5E7EB;">Make.com / SendGrid</td></tr>
+        <tr><td style="padding:8px 12px;border:1px solid #E5E7EB;">🎥 Conferencing</td><td style="padding:8px 12px;border:1px solid #E5E7EB;">Core Team</td><td style="padding:8px 12px;border:1px solid #E5E7EB;">API / Email trigger</td><td style="padding:8px 12px;border:1px solid #E5E7EB;">Zoom / Teams / GMeet APIs</td></tr>
+        <tr style="background:#FAFAFA;"><td style="padding:8px 12px;border:1px solid #E5E7EB;">⏰ Reminders</td><td style="padding:8px 12px;border:1px solid #E5E7EB;">Core Team</td><td style="padding:8px 12px;border:1px solid #E5E7EB;">Code</td><td style="padding:8px 12px;border:1px solid #E5E7EB;">APScheduler / Celery</td></tr>
+        <tr><td style="padding:8px 12px;border:1px solid #E5E7EB;">🎤 Event Execution</td><td style="padding:8px 12px;border:1px solid #E5E7EB;">Core Team</td><td style="padding:8px 12px;border:1px solid #E5E7EB;">Code + Google Forms</td><td style="padding:8px 12px;border:1px solid #E5E7EB;">Drive API + Forms</td></tr>
+        <tr style="background:#FAFAFA;"><td style="padding:8px 12px;border:1px solid #E5E7EB;">✍️ Post-Event</td><td style="padding:8px 12px;border:1px solid #E5E7EB;">Core Team</td><td style="padding:8px 12px;border:1px solid #E5E7EB;">Code + LLM</td><td style="padding:8px 12px;border:1px solid #E5E7EB;">Claude / GPT + Drive + LinkedIn API</td></tr>
+        <tr><td style="padding:8px 12px;border:1px solid #E5E7EB;">📊 Analytics</td><td style="padding:8px 12px;border:1px solid #E5E7EB;">Core Team</td><td style="padding:8px 12px;border:1px solid #E5E7EB;">Code + BI</td><td style="padding:8px 12px;border:1px solid #E5E7EB;">Looker Studio / Metabase</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<div style="background:#1F2937;color:#9CA3AF;text-align:center;padding:20px 40px;font-size:.78rem;margin-top:20px;">
+  WiMLDS Pune Meetup Automation Blueprint v9.0 · Architecture &amp; Design Document · Generated Feb 2026
+  <br style="margin:4px;"> Next step: request code for each agent, component, and orchestration layer.
+</div>
+
+</body>
+</html>

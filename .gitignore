@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+dist/
+build/
+.pytest_cache/
+
+# Environment and secrets
+wimlds/config/.env
+wimlds/config/service-account.json
+wimlds/config/partner_list.csv
+
+# Logs and local runtime output
+logs/
+*.log
+wimlds_poc_demo/wimlds_poc/output/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Chrome profile (WA session)
+~/.wimlds_wa_profile/
